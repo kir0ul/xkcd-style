@@ -5,12 +5,17 @@ services:
     container_name: jupyter_custom
     build: .
     ports:
-      - "8890:8888"
+      - "8888:8888"
     environment:
       WDB_SOCKET_SERVER: wdb
       WDB_NO_BROWSER_AUTO_OPEN: "True"
+      JUPYTER_ENABLE_LAB: "yes"
+      RESTARTABLE: "yes"
     volumes:
       - "./:/repo:rw"
+      # - ./:/home/jovyan/work
+      # - /etc/passwd:/etc/passwd:ro
+      # - /etc/group:/etc/group:ro
 
   wdb:
     image: kozea/wdb
