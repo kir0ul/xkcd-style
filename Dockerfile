@@ -6,8 +6,7 @@ MAINTAINER Andrea PIERRÉ <andrea_pierre@brown.edu>
 # RUN chown jovyan:users /repo
 # WORKDIR /repo
 # VOLUME ["/repo"]
-
-# # RUN chmod -R 777 /repo
+# RUN chmod -R 777 /repo
 
 # # Add Tini. Tini operates as a process subreaper for jupyter. This prevents
 # # kernel crashes.
@@ -17,10 +16,15 @@ MAINTAINER Andrea PIERRÉ <andrea_pierre@brown.edu>
 # ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # name your environment and choose python 3.x version
-ARG conda_env=python37
+ARG conda_env=xkcd
 
 # Install dependencies from environment.yml file
 COPY environment.yml /home/$NB_USER/tmp/
+
+# Fix write persmissions
+USER root
+RUN chown jovyan:users /home/$NB_USER/tmp/
+USER $NB_USER
 
 RUN cd /home/$NB_USER/tmp/ && \
     conda env create -p $CONDA_DIR/envs/$conda_env -f environment.yml && \
@@ -37,9 +41,10 @@ ENV PATH $CONDA_DIR/envs/${conda_env}/bin:$PATH
 # if you want this environment to be the default one, uncomment the following line:
 ENV CONDA_DEFAULT_ENV ${conda_env}
 
-# RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager \
-#     jupyter-matplotlib @ryantam626/jupyterlab_code_formatter jupyterlab-flake8
-# RUN jupyter serverextension enable --py jupyterlab_code_formatter
+# Install JupyterLab extensions
+RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager \
+    jupyter-matplotlib @ryantam626/jupyterlab_code_formatter jupyterlab-flake8
+RUN jupyter serverextension enable --py jupyterlab_code_formatter
 
 WORKDIR /repo
 
