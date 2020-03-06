@@ -3,7 +3,10 @@ version: "3.7"
 services:
   jupyter_custom:
     container_name: jupyter_custom
-    build: .
+    build:
+      context: .
+      args:
+        conda_env: "Fleischmann"
     ports:
       - "8888:8888"
     environment:

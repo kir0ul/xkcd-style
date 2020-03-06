@@ -1,5 +1,5 @@
 FROM jupyter/minimal-notebook:latest
-MAINTAINER Andrea PIERRÉ <andrea_pierre@brown.edu>
+LABEL maintainer="Andrea PIERRÉ <andrea_pierre@brown.edu>"
 
 # USER root
 # RUN mkdir /repo
@@ -15,10 +15,7 @@ MAINTAINER Andrea PIERRÉ <andrea_pierre@brown.edu>
 # RUN chmod +x /usr/bin/tini
 # ENTRYPOINT ["/usr/bin/tini", "--"]
 
-# name your environment and choose python 3.x version
-ARG conda_env=xkcd
-
-# Install dependencies from environment.yml file
+# Copy dependencies file
 COPY environment.yml /home/$NB_USER/tmp/
 
 # Fix write persmissions
@@ -26,6 +23,16 @@ USER root
 RUN chown jovyan:users /home/$NB_USER/tmp/
 USER $NB_USER
 
+# Default Conda environment name, otherwise we need to use some templating engine on the Dockerfile
+ARG conda_env="Fleischmann"
+RUN sed -i "s/name:.*/name: $conda_env/g" /home/$NB_USER/tmp/environment.yml
+
+# Update packages managers
+# RUN python -m pip install --upgrade pip
+# RUN npm i npm@latest -g
+# RUN conda update -n base conda
+
+# Install dependencies from environment.yml file
 RUN cd /home/$NB_USER/tmp/ && \
     conda env create -p $CONDA_DIR/envs/$conda_env -f environment.yml && \
     conda clean --all -f -y
@@ -42,10 +49,13 @@ ENV PATH $CONDA_DIR/envs/${conda_env}/bin:$PATH
 ENV CONDA_DEFAULT_ENV ${conda_env}
 
 # Install JupyterLab extensions
-RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager \
-    jupyter-matplotlib @ryantam626/jupyterlab_code_formatter jupyterlab-flake8
-RUN jupyter serverextension enable --py jupyterlab_code_formatter
+RUN jupyter labextension install --no-build @jupyter-widgets/jupyterlab-manager \
+    jupyter-matplotlib \
+    @ryantam626/jupyterlab_code_formatter && \
+    # jupyterlab-flake8 && \
+    jupyter serverextension enable --py jupyterlab_code_formatter && \
+    jupyter lab clean && \
+    jupyter lab build
 
 WORKDIR /repo
-
 CMD ["start.sh", "jupyter", "lab"]
