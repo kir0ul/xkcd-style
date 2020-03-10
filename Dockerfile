@@ -1,13 +1,6 @@
 FROM jupyter/minimal-notebook:latest
 LABEL maintainer="Andrea PIERRÉ <andrea_pierre@brown.edu>"
 
-# USER root
-# RUN mkdir /repo
-# RUN chown jovyan:users /repo
-# WORKDIR /repo
-# VOLUME ["/repo"]
-# RUN chmod -R 777 /repo
-
 # # Add Tini. Tini operates as a process subreaper for jupyter. This prevents
 # # kernel crashes.
 # ENV TINI_VERSION v0.6.0
@@ -26,11 +19,6 @@ USER $NB_USER
 # Default Conda environment name, otherwise we need to use some templating engine on the Dockerfile
 ARG conda_env="Fleischmann"
 RUN sed -i "s/name:.*/name: $conda_env/g" /home/$NB_USER/tmp/environment.yml
-
-# Update packages managers
-# RUN python -m pip install --upgrade pip
-# RUN npm i npm@latest -g
-# RUN conda update -n base conda
 
 # Install dependencies from environment.yml file
 RUN cd /home/$NB_USER/tmp/ && \
@@ -54,8 +42,9 @@ RUN jupyter labextension install --no-build @jupyter-widgets/jupyterlab-manager 
     @ryantam626/jupyterlab_code_formatter && \
     # jupyterlab-flake8 && \
     jupyter serverextension enable --py jupyterlab_code_formatter && \
+    # jupyter labextension update --all && \
     jupyter lab clean && \
     jupyter lab build
 
-WORKDIR /repo
+WORKDIR /home/$NB_USER/work/
 CMD ["start.sh", "jupyter", "lab"]
